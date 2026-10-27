@@ -1,11 +1,15 @@
 import { content } from "@/content";
+import LilyStage from "@/components/lily/LilyStage";
 
 export default function Home() {
   const { about } = content;
 
   return (
-    <main className="flex flex-1 flex-col items-center justify-center px-6 py-24">
-      <div className="max-w-xl">
+    <main className="flex flex-1 flex-col">
+      <section className="relative h-svh w-full">
+        <LilyStage className="absolute inset-0" />
+      </section>
+      <div className="mx-auto max-w-xl px-6 py-24">
         <p className="text-sm uppercase tracking-widest text-accent">
           {about.title}
         </p>
