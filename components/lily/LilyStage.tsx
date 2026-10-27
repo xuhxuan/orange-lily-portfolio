@@ -1,21 +1,45 @@
 "use client";
 
-import { Suspense, useRef } from "react";
+import { Suspense, useCallback, useEffect, useRef, useState } from "react";
+import { useRouter } from "next/navigation";
 import { Canvas } from "@react-three/fiber";
 import { OrbitControls } from "@react-three/drei";
+import { content, isSectionId, type SectionId } from "@/content";
+import SectionPanel from "@/components/ui/SectionPanel";
 import Lily, { type LilyApi } from "./Lily";
+import LilyCursor from "./LilyCursor";
 import StudioLighting from "./StudioLighting";
 
-// The 3D scene: camera, lighting, the lily and gentle rotate-to-look-around.
+const NOTE_MS = 1600;
+
+// The home-page hero: the 3D lily, the hover cursor and the side panel.
 // Zoom is off so scrolling the page still works over the flower.
-export default function LilyStage({
-  className,
-  onSelect,
-}: {
-  className?: string;
-  onSelect?: (section: string) => void;
-}) {
+export default function LilyStage({ className }: { className?: string }) {
   const api = useRef<LilyApi | null>(null);
+  const router = useRouter();
+  const [hovered, setHovered] = useState<string | null>(null);
+  const [selected, setSelected] = useState<SectionId | null>(null);
+  const [panelSection, setPanelSection] = useState<SectionId | null>(null);
+  const [note, setNote] = useState(false);
+  const noteTimer = useRef<number | undefined>(undefined);
+
+  useEffect(() => () => window.clearTimeout(noteTimer.current), []);
+
+  const onSelect = useCallback((section: string | null) => {
+    const id = section && isSectionId(section) ? section : null;
+    setSelected(id);
+    if (id) setPanelSection(id); // keep the last one while the panel slides out
+  }, []);
+
+  const onNudge = useCallback(() => {
+    setNote(true);
+    window.clearTimeout(noteTimer.current);
+    noteTimer.current = window.setTimeout(() => setNote(false), NOTE_MS);
+  }, []);
+
+  const onOpen = useCallback((section: string) => router.push(`/${section}`), [router]);
+
+  const label = cursorLabel(hovered, selected, note);
 
   return (
     <div className={className}>
@@ -27,7 +51,7 @@ export default function LilyStage({
       >
         <StudioLighting />
         <Suspense fallback={null}>
-          <Lily apiRef={api} onSelect={onSelect} />
+          <Lily apiRef={api} onHover={setHovered} onSelect={onSelect} onOpen={onOpen} onNudge={onNudge} />
         </Suspense>
         <OrbitControls
           makeDefault
@@ -40,6 +64,18 @@ export default function LilyStage({
           maxPolarAngle={1.75}
         />
       </Canvas>
+      <SectionPanel section={panelSection} open={selected !== null} onClose={() => api.current?.reset()} />
+      <LilyCursor label={label} />
     </div>
   );
+}
+
+function cursorLabel(hovered: string | null, selected: SectionId | null, note: boolean) {
+  if (!hovered) return null;
+  if (hovered.startsWith("making")) {
+    return note ? content.inTheMaking.note : content.inTheMaking.label;
+  }
+  if (!isSectionId(hovered)) return null;
+  if (hovered === selected) return content.lily.open;
+  return `${content.sections[hovered].title} · ${content.lily.discover}`;
 }
