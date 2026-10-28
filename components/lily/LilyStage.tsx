@@ -76,6 +76,6 @@ function cursorLabel(hovered: string | null, selected: SectionId | null, note: b
     return note ? content.inTheMaking.note : content.inTheMaking.label;
   }
   if (!isSectionId(hovered)) return null;
-  if (hovered === selected) return content.lily.open;
-  return `${content.sections[hovered].title} · ${content.lily.discover}`;
+  const action = hovered === selected ? content.lily.open : content.lily.discover;
+  return `${content.sections[hovered].title} · ${action}`;
 }
