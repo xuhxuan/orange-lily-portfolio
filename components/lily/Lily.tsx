@@ -43,8 +43,8 @@ const NUDGE_FRACTION = 0.45; // how far an "in the making" petal moves before sp
 const NUDGE_MS = 380;
 const MUTED_OPACITY = 0.3;
 const GLOW = 6;
-const ROTATE_SPEED = 0.7; // OrbitControls units: 2 = one turn per 30 s
-const IDLE_BEFORE_ROTATE = 2.5; // seconds
+const SECONDS_PER_TURN = 60; // turntable speed: one full rotation every 60 s
+const IDLE_BEFORE_ROTATE = 0.6; // seconds
 
 export type LilyApi = { reset: () => void };
 
@@ -185,6 +185,7 @@ export default function Lily({
   const hovered = useRef<Part | null>(null);
   const selected = useRef<Part | null>(null);
   const orbiting = useRef(false);
+  const spin = useRef(0); // 0 = stopped, 1 = full turntable speed
   const lastInput = useRef(0);
   const drag = useRef<{
     part: Part;
@@ -367,8 +368,10 @@ export default function Lily({
       const idle = now() - lastInput.current > IDLE_BEFORE_ROTATE;
       const rotate =
         !instant && !blooming && idle && !hovered.current && !selected.current && !orbiting.current && !drag.current;
-      const target = rotate ? ROTATE_SPEED : 0;
-      controls.autoRotateSpeed += (target - controls.autoRotateSpeed) * (1 - Math.exp(-1.5 * dt));
+      spin.current += ((rotate ? 1 : 0) - spin.current) * (1 - Math.exp(-4 * dt));
+      // OrbitControls assumes 60 frames per second, so scale by the real frame
+      // time to keep the same speed on 60 Hz and 120 Hz screens.
+      controls.autoRotateSpeed = (60 / SECONDS_PER_TURN) * spin.current * (dt * 60);
     }
 
     // Parts drift slowly to their target (fast while dragged; nudges spring quicker).
