@@ -69,9 +69,9 @@ export const content = {
       items: [],
     },
     hobbies: {
-      title: "Hobbies",
+      title: "Interests",
       short: "Placeholder: one line about life outside work.",
-      long: "Placeholder: a longer intro to your hobbies.",
+      long: "Placeholder: a longer intro to your interests.",
       items: [],
     },
   } satisfies Record<string, Section>,
@@ -85,7 +85,7 @@ export const content = {
   // Small interface words used around the lily.
   lily: {
     discover: "Discover",
-    open: "Open",
+    open: "Read more",
     explore: "Explore",
     arrow: "→",
     close: "Close",
